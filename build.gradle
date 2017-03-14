@@ -1,0 +1,45 @@
+buildscript {
+
+    apply from: "${project.rootDir}/GradleExtensions/dependencies.gradle"
+    apply from: "${project.rootDir}/GradleExtensions/utils.gradle"
+
+    repositories {
+        jcenter()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://maven.fabric.io/public' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-dev/' }
+    }
+    dependencies {
+        classpath plugin.gradleRetroLambda
+        classpath plugin.gradleBuildTools
+        classpath plugin.dexcountGradle
+        classpath plugin.mavenGradle
+        classpath plugin.kotlinGradle
+        classpath plugin.fabricTools
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+        maven { url 'https://maven.fabric.io/public' }
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-dev/' }
+    }
+
+    tasks.withType(JavaCompile) {
+        configure(options) {
+            incremental = true
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.4.1'
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
