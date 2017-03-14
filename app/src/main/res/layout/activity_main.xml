@@ -1,17 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
+    android:background="#303050"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <FrameLayout
-        android:id="@+id/fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+    <net.kibotu.circleselector.TouchViewGroup
+        android:id="@+id/hitbox"
+        android:layout_width="309dp"
+        android:layout_height="309dp"
+        android:layout_gravity="center"
+        android:background="@drawable/circle_selector_container">
 
-</LinearLayout>
+        <ImageView
+            android:id="@+id/wheel"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/circle_selector_wheel" />
+
+        <ImageView
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/circle_selector_center"
+            android:visibility="visible" />
+
+    </net.kibotu.circleselector.TouchViewGroup>
+
+    <com.common.android.utils.ui.LinesView
+        android:id="@+id/lines"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</FrameLayout>
