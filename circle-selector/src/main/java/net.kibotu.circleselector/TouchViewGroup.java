@@ -1,21 +1,19 @@
 package net.kibotu.circleselector;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Point;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import android.widget.RelativeLayout;
-
-import com.common.android.utils.extensions.MathExtensions;
-import com.common.android.utils.logging.Logger;
-import com.common.android.utils.misc.Vector2;
-
-import net.kibotu.android.deviceinfo.library.display.Dimension;
-import net.kibotu.android.deviceinfo.library.display.Display;
 
 
 /**
@@ -158,11 +156,54 @@ public class TouchViewGroup extends RelativeLayout {
 
         offset = new Vector2();
 
-        final Dimension screenDimensions = Display.getScreenDimensions();
+        final Dimension screenDimensions = getScreenDimensions(CircleSelector.INSTANCE.getActivity());
         screenCenter = new Vector2(screenDimensions.width / 2f, screenDimensions.height / 2f);
 
         longPressTimeout = ViewConfiguration.getLongPressTimeout();
-        minDistanceMovingGesture = MathExtensions.dpToPx(20);
+        minDistanceMovingGesture = dpToPx(20);
+    }
+
+    public static int dpToPx(final int dp) {
+        final float scale = getDensity();
+        return (int) (dp * scale + 0.5f);
+    }
+
+    public static float getDensity() {
+        return Resources.getSystem().getDisplayMetrics().density;
+    }
+
+    public static android.view.Display getDefaultDisplay(Activity activity) {
+        return activity.getWindowManager().getDefaultDisplay();
+    }
+
+    @NonNull
+    public static Dimension getScreenDimensions(Activity activity) {
+
+        final DisplayMetrics dm = new DisplayMetrics();
+        final android.view.Display display = getDefaultDisplay(activity);
+        display.getMetrics(dm);
+
+        int screenWidth = dm.widthPixels;
+        int screenHeight = dm.heightPixels;
+
+        if (Build.VERSION.SDK_INT < 17) {
+            try {
+                screenWidth = (Integer) android.view.Display.class.getMethod("getRawWidth").invoke(display);
+                screenHeight = (Integer) android.view.Display.class.getMethod("getRawHeight").invoke(display);
+            } catch (Exception ignored) {
+            }
+        }
+        if (Build.VERSION.SDK_INT >= 17) {
+            try {
+                Point realSize = new Point();
+                android.view.Display.class.getMethod("getRealSize", Point.class).invoke(display, realSize);
+                screenWidth = realSize.x;
+                screenHeight = realSize.y;
+            } catch (Exception ignored) {
+            }
+        }
+
+        return new Dimension(screenWidth, screenHeight);
     }
 
     /**
@@ -185,7 +226,7 @@ public class TouchViewGroup extends RelativeLayout {
             case MotionEvent.ACTION_DOWN:
 
                 if (SHOW_DEBUG_LOGS)
-                    Logger.v(tag(), "[onInterceptTouchEvent] ACTION_DOWN " + event);
+                    Log.v(tag(), "[onInterceptTouchEvent] ACTION_DOWN " + event);
                 previous.set(event.getRawX(), event.getRawY());
                 start.set(event.getRawX(), event.getRawY());
                 break;
@@ -193,7 +234,7 @@ public class TouchViewGroup extends RelativeLayout {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 if (SHOW_DEBUG_LOGS)
-                    Logger.v(tag(), "[onInterceptTouchEvent] ACTION_UP || ACTION_CANCEL downTime=" + (event.getEventTime() - event.getDownTime()) + " " + event);
+                    Log.v(tag(), "[onInterceptTouchEvent] ACTION_UP || ACTION_CANCEL downTime=" + (event.getEventTime() - event.getDownTime()) + " " + event);
                 seDragging(false);
                 break;
 
@@ -202,7 +243,7 @@ public class TouchViewGroup extends RelativeLayout {
                 break;
 
             default:
-                if (SHOW_DEBUG_LOGS) Logger.v(tag(), "[onInterceptTouchEvent] Unhandled " + event);
+                if (SHOW_DEBUG_LOGS) Log.v(tag(), "[onInterceptTouchEvent] Unhandled " + event);
         }
 
         return true;
@@ -234,7 +275,7 @@ public class TouchViewGroup extends RelativeLayout {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 if (SHOW_DEBUG_LOGS)
-                    Logger.v(tag(), "[onTouchEvent] ACTION_UP || ACTION_CANCEL downTime=" + downTime + " " + event);
+                    Log.v(tag(), "[onTouchEvent] ACTION_UP || ACTION_CANCEL downTime=" + downTime + " " + event);
                 seDragging(false);
 
                 // downtime below long press duration then fire click, otherwise send cancel long press event
@@ -249,7 +290,7 @@ public class TouchViewGroup extends RelativeLayout {
             case MotionEvent.ACTION_MOVE:
 
                 if (SHOW_DEBUG_LOGS)
-                    Logger.v(tag(), "[onTouchEvent] ACTION_MOVE downTime=" + downTime + " " + event);
+                    Log.v(tag(), "[onTouchEvent] ACTION_MOVE downTime=" + downTime + " " + event);
 
                 getLocationInWindow(location);
                 current.set(event.getRawX(), event.getRawY());
@@ -258,13 +299,13 @@ public class TouchViewGroup extends RelativeLayout {
                 setAngle(new Vector2(currentClamped).sub(center).nor().angle() + DEGREE_OFFSET);
 
                 if (downTime >= longPressTimeout) {
-                    if (SHOW_DEBUG_LOGS) Logger.v(tag(), "[ACTION_MOVE] downTime=" + downTime);
+                    if (SHOW_DEBUG_LOGS) Log.v(tag(), "[ACTION_MOVE] downTime=" + downTime);
                     onLongPress(true);
                 }
 
                 boolean consume = !isMoveGesture() || isLongPressing;
                 if (SHOW_DEBUG_LOGS)
-                    Logger.v(tag(), "[isMoveGesture] start=" + start + " current=" + current + " distance=" + start.dst(current) + " minDistanceMovingGesture=" + minDistanceMovingGesture + " isMoveGesture=" + isMoveGesture() + " isLongPressing=" + isLongPressing + " consume=" + consume);
+                    Log.v(tag(), "[isMoveGesture] start=" + start + " current=" + current + " distance=" + start.dst(current) + " minDistanceMovingGesture=" + minDistanceMovingGesture + " isMoveGesture=" + isMoveGesture() + " isLongPressing=" + isLongPressing + " consume=" + consume);
 
                 // consume touch event inside scroll container like view pagers
                 getParent().requestDisallowInterceptTouchEvent(consume);
@@ -273,7 +314,7 @@ public class TouchViewGroup extends RelativeLayout {
                 break;
 
             default:
-                if (SHOW_DEBUG_LOGS) Logger.v(tag(), "[onTouchEvent] Unhandled " + event);
+                if (SHOW_DEBUG_LOGS) Log.v(tag(), "[onTouchEvent] Unhandled " + event);
         }
 
         return true;
@@ -290,7 +331,7 @@ public class TouchViewGroup extends RelativeLayout {
     // region click
 
     private void onClick(int duration) {
-        Logger.v(tag(), "[onClick]");
+        Log.v(tag(), "[onClick]");
         if (onTapListener != null)
             onTapListener.onUpdate(duration, this);
     }
@@ -393,5 +434,20 @@ public class TouchViewGroup extends RelativeLayout {
     @NonNull
     public String tag() {
         return getClass().getSimpleName();
+    }
+
+
+
+    public static float nearestNumber(float number, float... numbers) {
+        float distance = Math.abs(numbers[0] - number);
+        int index = 0;
+        for (int c = 1; c < numbers.length; c++) {
+            float cDistance = Math.abs(numbers[c] - number);
+            if (cDistance < distance) {
+                index = c;
+                distance = cDistance;
+            }
+        }
+        return numbers[index];
     }
 }

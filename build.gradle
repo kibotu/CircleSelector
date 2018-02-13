@@ -1,43 +1,22 @@
 buildscript {
-
-    apply from: "${project.rootDir}/GradleExtensions/dependencies.gradle"
-    apply from: "${project.rootDir}/GradleExtensions/utils.gradle"
-
+    ext.kotlin_version = '1.2.21'
     repositories {
+        google()
         jcenter()
         maven { url 'https://jitpack.io' }
-        maven { url 'https://maven.fabric.io/public' }
-        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-        maven { url 'https://dl.bintray.com/kotlin/kotlin-dev/' }
     }
     dependencies {
-        classpath plugin.gradleRetroLambda
-        classpath plugin.gradleBuildTools
-        classpath plugin.dexcountGradle
-        classpath plugin.mavenGradle
-        classpath plugin.kotlinGradle
-        classpath plugin.fabricTools
+        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 allprojects {
     repositories {
+        google()
         jcenter()
         maven { url 'https://jitpack.io' }
-        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-        maven { url 'https://maven.fabric.io/public' }
-        maven { url 'https://dl.bintray.com/kotlin/kotlin-dev/' }
     }
-
-    tasks.withType(JavaCompile) {
-        configure(options) {
-            incremental = true
-        }
-    }
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.4.1'
 }
 
 task clean(type: Delete) {
