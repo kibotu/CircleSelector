@@ -1,7 +1,8 @@
 package net.kibotu.circleselector
 
 import android.animation.Animator
-import android.os.Build
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.KITKAT
 import android.os.Bundle
 import android.support.v4.math.MathUtils.clamp
 import android.support.v7.app.AppCompatActivity
@@ -15,7 +16,7 @@ import com.dtx12.android_animations_actions.actions.Actions.play
 import com.dtx12.android_animations_actions.actions.Actions.scaleTo
 import com.dtx12.android_animations_actions.actions.Interpolations
 import kotlinx.android.synthetic.main.activity_main.*
-import net.kibotu.circleselector.TouchViewGroup.nearestNumber
+import net.kibotu.circleselector.CircleSelector.Companion.nearestNumber
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -34,7 +35,6 @@ class MainActivity : AppCompatActivity() {
 
     private val debugLinesEnabled = false
 
-
     private var nextSnapAngle = 0f
 
     private val animators: MutableList<Animator> = ArrayList()
@@ -48,27 +48,27 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-
         play(scaleTo(0.5f, 0.5f), wheel)
 
         // set offset if necessary
         // hitBox.setPivotOffset(0, dpToPx(-12));
 
-        hitBox.setOnTapListener { duration, touchViewGroup -> onTap(duration, touchViewGroup) }
+        hitBox.onTapListener = this::onTap
 
         hitBox.setLongPressTimeout(ViewConfiguration.getLongPressTimeout() - longPressAnimationDuration)
-        hitBox.setOnLongPressedListener { isLongPressing, touchViewGroup -> onLongPressed(isLongPressing, touchViewGroup) }
 
-        hitBox.setAngleUpdateListener { angle, touchViewGroup -> onAngleUpdate(angle, touchViewGroup) }
+        hitBox.onLongPressedListener = this::onLongPressed
+
+        hitBox.angleUpdateListener = this::onAngleUpdate
     }
 
-    private fun onAngleUpdate(angle: Double, touchViewGroup: TouchViewGroup) {
+    private fun onAngleUpdate(angle: Double, circleSelector: CircleSelector) {
         // Logger.v(tag(), "angle=" + angle.floatValue());
 
         // 0) don't do anything unless user is long pressing
 
         // 1) clamp angle
-        val clampedAngle = clamp(touchViewGroup.angle.toFloat(), TIMER_10H_ANGLE, TIMER_15H_ANGLE)
+        val clampedAngle = clamp(circleSelector.angle.toFloat(), TIMER_10H_ANGLE, TIMER_15H_ANGLE)
 
         // 2) find nearest target angle
         nextSnapAngle = nearestNumber(clampedAngle, TIMER_10H_ANGLE, SMART_MODE_ANGLE, TIMER_15H_ANGLE)
@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
             lines.setLines(Line(hitBox.center, hitBox.current))
     }
 
-    private fun onLongPressed(isLongPressing: Boolean, touchViewGroup: TouchViewGroup) {
+    private fun onLongPressed(isLongPressing: Boolean, circleSelector: CircleSelector) {
         Log.v(TAG, "[longPress] isLongPressing=" + isLongPressing)
 
         val duration = longPressAnimationDuration / 1000f
@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
 
     internal var lastTap = System.currentTimeMillis()
 
-    private fun onTap(duration: Int?, touchViewGroup: TouchViewGroup) {
+    private fun onTap(duration: Int?, circleSelector: CircleSelector) {
         val currentTime = System.currentTimeMillis()
         Log.v(TAG, "[onTap] duration=" + duration + " lastTap=" + lastTap + " currentTime=" + currentTime + " difference=" + (currentTime - lastTap) + " tapTimeOut=" + ViewConfiguration.getDoubleTapTimeout())
         if (currentTime - lastTap < ViewConfiguration.getDoubleTapTimeout()) {
@@ -147,13 +147,13 @@ class MainActivity : AppCompatActivity() {
     private fun cancelAnimations() {
         Log.v(TAG, "[cancelAnimations] " + animators.size)
         for (animator in animators)
-            animator?.cancel()
+            animator.cancel()
 
         animators.clear()
     }
 
-    fun enableImmersiveMode() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT)
+    private fun enableImmersiveMode() {
+        if (SDK_INT < KITKAT)
             return
 
         val window = window

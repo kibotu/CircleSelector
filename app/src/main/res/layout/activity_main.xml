@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context="net.kibotu.circleselector.MainActivity">
 
-    <net.kibotu.circleselector.TouchViewGroup
+    <net.kibotu.circleselector.CircleSelector
         android:id="@+id/hitBox"
         android:layout_width="309dp"
         android:layout_height="309dp"
@@ -21,16 +21,16 @@
             android:id="@+id/wheel"
             android:layout_width="220dp"
             android:layout_height="220dp"
-            android:layout_centerInParent="true"
+            android:layout_gravity="center"
             android:src="@drawable/circle_selector_wheel" />
 
         <ImageView
             android:layout_width="150dp"
             android:layout_height="150dp"
-            android:layout_centerInParent="true"
+            android:layout_gravity="center"
             android:src="@drawable/circle_selector_center" />
 
-    </net.kibotu.circleselector.TouchViewGroup>
+    </net.kibotu.circleselector.CircleSelector>
 
     <net.kibotu.circleselector.LinesView
         android:id="@+id/lines"
